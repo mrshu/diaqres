@@ -25,6 +25,14 @@ def clean_dump(filename):
 
 
 def get_dump(lang, filename=None):
+    # Taken from http://stackoverflow.com/a/1094933
+    def sizeof_fmt(num, suffix='B'):
+        for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+            if abs(num) < 1024.0:
+                return "%3.1f%s%s" % (num, unit, suffix)
+            num /= 1024.0
+        return "%.1f%s%s" % (num, 'Yi', suffix)
+
     url = WIKI_DUMPS_URL + DUMP_DIR + DUMP_FILE
     url = url.format(lang)
 
@@ -33,10 +41,11 @@ def get_dump(lang, filename=None):
 
     r = requests.get(url, stream=True)
     with open(filename, 'wb') as f:
-        total_length = int(r.headers.get('content-length')) / 1024 + 1
-        label = 'Downloading {}'.format(filename)
+        total_length = int(r.headers.get('content-length'))
+        label = 'Downloading {} ({})'.format(filename,
+                                             sizeof_fmt(total_length))
         with click.progressbar(r.iter_content(chunk_size=1024),
-                               length=total_length,
+                               length=int(total_length / 1024) + 1,
                                label=label) as bar:
             for chunk in bar:
                 if chunk:
