@@ -24,7 +24,7 @@ def clean_dump(filename):
 def get_dump(lang, filename):
     """Download a Wikipedia dump for a language."""
     from .utils import get_dump as download
-    click.echo('Starting to download {} Wikipedia dump'.format(lang))
+    click.echo('Starting to download Wikipedia dump for lang {}.'.format(lang))
     download(lang, filename=filename)
     click.echo('Download finished')
 
