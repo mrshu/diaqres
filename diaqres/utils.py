@@ -2,6 +2,7 @@ import re
 import sys
 import requests
 import click
+import codecs
 TAGS = re.compile(r'<[^>]+>', re.IGNORECASE)
 DEBREE = re.compile(r'\%.+>', re.IGNORECASE)
 TABLE_DEBREE = re.compile(r'^\![^\|]+\|', re.IGNORECASE)
@@ -51,3 +52,24 @@ def get_dump(lang, filename=None):
                 if chunk:
                     f.write(chunk)
                     f.flush()
+
+
+def stats(filename):
+    from unidecode import unidecode
+    count = 0
+    accent_count = 0
+    with codecs.open(filename, 'r', 'utf-8') as f:
+        for line in f:
+            for c in line:
+                if c.isspace():
+                    continue
+                count += 1
+                clean_c = unidecode(c)
+                if c != clean_c:
+                    accent_count += 1
+
+    percent = (accent_count/float(count))*100
+    output = "Accent characters: {}/{} ({:.2}%)".format(accent_count,
+                                                        count,
+                                                        percent)
+    print(output)

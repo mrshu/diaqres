@@ -29,5 +29,16 @@ def get_dump(lang, filename):
     click.echo('Download finished')
 
 
+@main.command('stats')
+@click.option('--filename',
+              type=click.Path(exists=True),
+              required=True)
+def stats(filename):
+    """Print (diacritics) statistics on a given file"""
+    from .utils import stats as print_stats
+    click.echo('Starting to gather statistics on file {}'.format(filename))
+    print_stats(filename)
+
+
 if __name__ == '__main__':
     main()
