@@ -8,6 +8,8 @@ DEBREE = re.compile(r'\%.+>', re.IGNORECASE)
 TABLE_DEBREE = re.compile(r'^\![^\|]+\|', re.IGNORECASE)
 PX_DEBREE = re.compile(r'px[^>]+>', re.IGNORECASE)
 
+WORD = re.compile(r'\b\w+\b', re.IGNORECASE)
+
 WIKI_DUMPS_URL = 'https://dumps.wikimedia.org'
 DUMP_DIR = '/{0}wiki/latest/'
 DUMP_FILE = '{0}wiki-latest-pages-articles.xml.bz2'
@@ -58,18 +60,39 @@ def stats(filename):
     from unidecode import unidecode
     count = 0
     accent_count = 0
+
+    unique_words = set()
+    words = {}
+
     with codecs.open(filename, 'r', 'utf-8') as f:
         for line in f:
-            for c in line:
-                if c.isspace():
+            clean_line = unidecode(line)
+            for word, clean_word in zip(WORD.findall(line),
+                                        WORD.findall(clean_line)):
+                if word in unique_words:
                     continue
-                count += 1
+
+                if clean_word not in words:
+                    words[clean_word] = 0
+
+                if clean_word != word:
+                    words[clean_word] += 1
+
+                unique_words.add(word)
+
+            for c in line:
                 clean_c = unidecode(c)
+                if not clean_c.isalpha():
+                    continue
+
+                count += 1
                 if c != clean_c:
                     accent_count += 1
 
     percent = (accent_count/float(count))*100
-    output = "Accent characters: {}/{} ({:.2}%)".format(accent_count,
+    output = "Accent characters: {}/{} ({:.3}%)".format(accent_count,
                                                         count,
                                                         percent)
     print(output)
+
+    print("Numer of unique words: {}".format(len(unique_words)))
