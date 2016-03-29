@@ -2,13 +2,12 @@ import re
 import sys
 import requests
 import click
-import codecs
 TAGS = re.compile(r'<[^>]+>', re.IGNORECASE)
 DEBREE = re.compile(r'\%.+>', re.IGNORECASE)
 TABLE_DEBREE = re.compile(r'^\![^\|]+\|', re.IGNORECASE)
 PX_DEBREE = re.compile(r'px[^>]+>', re.IGNORECASE)
 
-WORD = re.compile(r'\b\w+\b', re.IGNORECASE)
+WORD = re.compile(r'\b\w\w+\b', re.IGNORECASE | re.UNICODE)
 
 WIKI_DUMPS_URL = 'https://dumps.wikimedia.org'
 DUMP_DIR = '/{0}wiki/latest/'
@@ -57,42 +56,73 @@ def get_dump(lang, filename=None):
 
 
 def stats(filename):
-    from unidecode import unidecode
+    import codecs
+    from os.path import getsize
+
+    def remove_accents(line):
+        import unicodedata
+        ndfk = unicodedata.normalize('NFKD', line)
+        return "".join([c for c in ndfk if not unicodedata.combining(c)])
+
     count = 0
     accent_count = 0
 
     unique_words = set()
     words = {}
 
+    file_size = getsize(filename)
     with codecs.open(filename, 'r', 'utf-8') as f:
-        for line in f:
-            clean_line = unidecode(line)
-            for word, clean_word in zip(WORD.findall(line),
-                                        WORD.findall(clean_line)):
-                if word in unique_words:
-                    continue
+        with click.progressbar(label=filename,
+                               length=file_size) as bar:
+            for line in f:
+                bar.update(len(line.encode('utf-8')) + 1)
+                line = line.lower()
+                found_words = WORD.findall(line)
 
-                if clean_word not in words:
-                    words[clean_word] = 0
+                clean_words = [remove_accents(word) for word in found_words]
 
-                if clean_word != word:
-                    words[clean_word] += 1
+                for word, clean_word in zip(found_words, clean_words):
+                    if word in unique_words:
+                        continue
 
-                unique_words.add(word)
+                    if clean_word not in words:
+                        words[clean_word] = 0
 
-            for c in line:
-                clean_c = unidecode(c)
-                if not clean_c.isalpha():
-                    continue
+                    if clean_word != word:
+                        words[clean_word] += 1
 
-                count += 1
-                if c != clean_c:
-                    accent_count += 1
+                    unique_words.add(word)
+
+                for c in line:
+                    clean_c = remove_accents(c)
+                    if not clean_c.isalpha():
+                        continue
+
+                    count += 1
+                    if c != clean_c:
+                        accent_count += 1
 
     percent = (accent_count/float(count))*100
     output = "Accent characters: {}/{} ({:.3}%)".format(accent_count,
                                                         count,
                                                         percent)
-    print(output)
+    click.echo(output)
+    click.echo()
 
-    print("Numer of unique words: {}".format(len(unique_words)))
+    from collections import Counter
+    c = Counter(words.values())
+
+    n_all_words = 0
+
+    click.echo("       # words + # alternations")
+    click.echo("---------------|---------------")
+    for k, v in dict(c.items()).iteritems():
+        click.echo("{:14} | {}".format(v, k))
+        n_all_words += v * (k + 1)
+
+    click.echo()
+    click.echo("Numer of all words: {}".format(n_all_words))
+    click.echo("Numer of unique words: {}".format(len(unique_words)))
+    click.echo("Top 5 most ambiguous words:")
+    for w in sorted(words, key=words.get, reverse=True)[:5]:
+        click.echo("{}\t{}".format(words[w], w))
