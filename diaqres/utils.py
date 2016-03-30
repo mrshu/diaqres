@@ -103,26 +103,34 @@ def stats(filename):
                         accent_count += 1
 
     percent = (accent_count/float(count))*100
-    output = "Accent characters: {}/{} ({:.3}%)".format(accent_count,
-                                                        count,
-                                                        percent)
-    click.echo(output)
+    click.echo("Accent characters: {}/{} ({:.3}%)".format(accent_count,
+                                                          count,
+                                                          percent))
     click.echo()
 
     from collections import Counter
     c = Counter(words.values())
 
     n_all_words = 0
+    n_clean_words = len(words)
+    n_unique_words = len(unique_words)
 
-    click.echo("       # words + # alternations")
+    click.echo("       # words | # alternations")
     click.echo("---------------|---------------")
     for k, v in dict(c.items()).iteritems():
         click.echo("{:14} | {}".format(v, k))
         n_all_words += v * (k + 1)
 
     click.echo()
-    click.echo("Numer of all words: {}".format(n_all_words))
-    click.echo("Numer of unique words: {}".format(len(unique_words)))
+    click.echo("Number of all words: {}".format(n_all_words))
+    click.echo("Number of all 'clean' words: {}".format(n_clean_words))
+    click.echo("Number of unique words: {}".format(n_unique_words))
+
+    lexdiff = float(n_unique_words)/n_clean_words
+    click.echo("LexDiff score: {}/{} = {:.3}".format(n_unique_words,
+                                                     n_clean_words,
+                                                     lexdiff))
+
     click.echo("Top 5 most ambiguous words:")
     for w in sorted(words, key=words.get, reverse=True)[:5]:
         click.echo("{}\t{}".format(words[w], w))
