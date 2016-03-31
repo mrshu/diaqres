@@ -38,6 +38,7 @@ def stats(filename):
     from .utils import stats as print_stats
     click.echo('Starting to gather statistics on file {}'.format(filename))
     print_stats(filename)
+    click.echo('Statistics printing finished')
 
 
 if __name__ == '__main__':
