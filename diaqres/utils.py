@@ -59,11 +59,6 @@ def stats(filename):
     import codecs
     from os.path import getsize
 
-    def remove_accents(line):
-        import unicodedata
-        ndfk = unicodedata.normalize('NFKD', line)
-        return "".join([c for c in ndfk if not unicodedata.combining(c)])
-
     count = 0
     accent_count = 0
 
@@ -134,3 +129,9 @@ def stats(filename):
     click.echo("Top 5 most ambiguous words:")
     for w in sorted(words, key=words.get, reverse=True)[:5]:
         click.echo("{}\t{}".format(words[w], w))
+
+
+def remove_accents(line):
+    import unicodedata
+    ndfk = unicodedata.normalize('NFKD', line)
+    return "".join([c for c in ndfk if not unicodedata.combining(c)])
