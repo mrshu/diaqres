@@ -41,5 +41,32 @@ def stats(filename):
     click.echo('Statistics printing finished')
 
 
+@main.command('graphemize')
+@click.option('--filename',
+              type=click.Path(exists=True),
+              required=True)
+def graphemize(filename):
+    from .utils import file_to_grapheme_corpus, load_object, save_object
+    from .models import GraphemeBasedModel
+    corpus = file_to_grapheme_corpus(filename, 5)
+    classes = load_object("{}.classes".format(filename))
+    model = GraphemeBasedModel()
+    model.train(corpus, classes)
+    click.echo(model.restore('Fantasticky program      '))
+    save_object(model, "{}.model".format(filename))
+
+
+@main.command('model-test')
+@click.option('--modelpath',
+              type=click.Path(exists=True),
+              required=True)
+@click.option('--filepath',
+              type=click.Path(exists=True),
+              required=True)
+def model_test(modelpath, filepath):
+    from .utils import file_to_grapheme_corpus, load_object, test_model
+    model = load_object(modelpath)
+    test_model(model, filepath)
+
 if __name__ == '__main__':
     main()
