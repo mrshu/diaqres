@@ -45,19 +45,18 @@ def stats(filename):
 @click.option('--filename',
               type=click.Path(exists=True),
               required=True)
-@click.option('--characters')
+@click.option('--characters', required=True)
 def graphemize(filename, characters):
     from .utils import (file_to_grapheme_corpus, load_object, save_object,
                         remove_accents)
     from .models import GraphemeBasedModel
     corpus = file_to_grapheme_corpus(filename, 5)
-    if characters:
-        classes = list(set(remove_accents(characters)))
-    else:
-        classes = load_object("{}.classes".format(filename))
-    click.echo(classes)
-    model = GraphemeBasedModel()
-    model.train(corpus, classes)
+    output_classes = list(characters)
+    input_classes = list(set(remove_accents(characters)))
+    click.echo(output_classes)
+
+    model = GraphemeBasedModel(input_classes=input_classes)
+    model.train(corpus, output_classes + input_classes)
     click.echo(model.restore('Fantasticky program'))
     save_object(model, "{}.model".format(filename))
 
