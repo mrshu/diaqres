@@ -20,15 +20,16 @@ class GraphemeBasedModel(DiacriticsRestorationModel):
 
     def train(self, corpus, classes=None):
         self.vectorizer = FeatureHasher(non_negative=True,
-                                        n_features=len(classes)*2*self.window,
+                                        n_features=len(classes)*20*self.window,
                                         input_type='pair')
+        self.classes = classes
         self.clf = MultinomialNB()
         i = 0
         j = 0
         X = []
         Y = []
         for x, y in corpus:
-            if x[self.window] != y:
+            if x[self.window][1] in self.classes:
                 X.append(x)
                 Y.append(y)
                 i += 1
@@ -47,9 +48,9 @@ class GraphemeBasedModel(DiacriticsRestorationModel):
         corpus = []
         out = ''
         for x, y in string_to_grapheme_corpus(string, self.window):
-            if x[self.window] != y:
-                x = self.vectorizer.transform(x)
-                out += self.clf.predict([x])[0]
+            if x[self.window][1] in self.classes:
+                x = self.vectorizer.transform([x])
+                out += self.clf.predict(x)[0]
             else:
                 out += y
         return out

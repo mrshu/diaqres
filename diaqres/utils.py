@@ -204,8 +204,10 @@ def readable_to_grapheme_corpus(readable, window, chunk_size=100):
         if len(data) < chunk_size + window:
             data = data + ' ' * window
 
-        line = prev_data[:window] + data
-        clean_line = remove_accents(line.lower())
+        line = prev_data[-2*window:] + data
+        prev_data = data
+        line = line.lower()
+        clean_line = remove_accents(line)
         for i in range(window, len(line)-window):
             yield (zip(range(2*window + 1),
                        list(clean_line[i-window:i+1+window])),
@@ -224,10 +226,24 @@ def load_object(file):
         return pickle.load(f)
 
 
-def test_model(model, filename):
+def test_model(model, filename, characters=None):
     from sklearn.metrics import classification_report
+    import string
     f = codecs.open(filename, 'r', 'utf-8')
     line = f.read().lower()
-    restored_line = model.restore(line)
+    if characters:
+        removed_characters = remove_accents(characters)
+        d = dict(zip(characters, removed_characters))
+        out_line = ''
+        for c in line:
+            if c in d:
+                out_line += d[c]
+            else:
+                out_line += c
+        restored_line = model.restore(out_line)
+    else:
+        restored_line = model.restore(remove_accents(line))
+    print(line[:50])
+    print(restored_line[:50])
     click.echo(classification_report(list(line),
                                      list(restored_line)))

@@ -45,14 +45,20 @@ def stats(filename):
 @click.option('--filename',
               type=click.Path(exists=True),
               required=True)
-def graphemize(filename):
-    from .utils import file_to_grapheme_corpus, load_object, save_object
+@click.option('--characters')
+def graphemize(filename, characters):
+    from .utils import (file_to_grapheme_corpus, load_object, save_object,
+                        remove_accents)
     from .models import GraphemeBasedModel
     corpus = file_to_grapheme_corpus(filename, 5)
-    classes = load_object("{}.classes".format(filename))
+    if characters:
+        classes = list(set(remove_accents(characters)))
+    else:
+        classes = load_object("{}.classes".format(filename))
+    click.echo(classes)
     model = GraphemeBasedModel()
     model.train(corpus, classes)
-    click.echo(model.restore('Fantasticky program      '))
+    click.echo(model.restore('Fantasticky program'))
     save_object(model, "{}.model".format(filename))
 
 
@@ -63,10 +69,11 @@ def graphemize(filename):
 @click.option('--filepath',
               type=click.Path(exists=True),
               required=True)
-def model_test(modelpath, filepath):
+@click.option('--characters')
+def model_test(modelpath, filepath, characters):
     from .utils import file_to_grapheme_corpus, load_object, test_model
     model = load_object(modelpath)
-    test_model(model, filepath)
+    test_model(model, filepath, characters=characters)
 
 if __name__ == '__main__':
     main()
