@@ -19,26 +19,31 @@ DUMP_FILE = '{0}wiki-latest-pages-articles.xml.bz2'
 
 
 def clean_dump(filename, ignore_character_group=NON_LATIN_RE, chunk_size=1024):
+    from os.path import getsize
+
     outfile = '{}.clean'.format(filename)
     ignore_characters = re.compile(ignore_character_group,
                                    re.IGNORECASE | re.UNICODE)
-
+    file_size = getsize(filename)
     with codecs.open(filename, 'r', 'utf-8') as f:
         with codecs.open(outfile, 'w', 'utf-8') as out:
-            while True:
-                line = f.read(chunk_size)
-                if not line:
-                    break
+            with click.progressbar(label=filename,
+                                   length=file_size) as bar:
+                while True:
+                    line = f.read(chunk_size)
+                    if not line:
+                        break
+                    bar.update(len(line.encode('utf-8')))
 
-                line = TAGS.sub('', line)
-                line = DEBREE.sub('', line)
-                line = TABLE_DEBREE.sub('', line)
-                line = PX_DEBREE.sub('', line)
-                line = ignore_characters.sub('', unicode(line))
+                    line = TAGS.sub('', line)
+                    line = DEBREE.sub('', line)
+                    line = TABLE_DEBREE.sub('', line)
+                    line = PX_DEBREE.sub('', line)
+                    line = ignore_characters.sub('', unicode(line))
 
-                line = WHITESPACE.sub(' ', line)
-                line = WHITESPACE.sub(' ', line)
-                out.write(line)
+                    line = WHITESPACE.sub(' ', line)
+                    line = WHITESPACE.sub(' ', line)
+                    out.write(line)
 
 
 def get_dump(lang, filename=None):
@@ -89,7 +94,7 @@ def stats(filename, chunk_size=1024):
                 if not line:
                     break
 
-                bar.update(len(line.encode('utf-8')) + 1)
+                bar.update(len(line.encode('utf-8')))
                 line = line.lower()
                 found_words = WORD.findall(line)
 

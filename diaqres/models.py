@@ -21,7 +21,7 @@ class GraphemeBasedModel(DiacriticsRestorationModel):
 
     def train(self, corpus, classes=None, chunk_size=100000):
         self.vectorizer = FeatureHasher(non_negative=True,
-                                        n_features=len(classes)*20*self.window,
+                                        n_features=len(classes)*2*self.window,
                                         input_type='pair')
         self.clf = MultinomialNB()
         i = 0
@@ -55,3 +55,14 @@ class GraphemeBasedModel(DiacriticsRestorationModel):
             else:
                 out += y
         return out
+
+
+class NoLearningBaselineModel(DiacriticsRestorationModel):
+    def __init__(self):
+        pass
+
+    def train(self, corpus, classes=None, chunk_size=100000):
+        pass
+
+    def restore(self, string):
+        return string
