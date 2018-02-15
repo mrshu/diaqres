@@ -20,10 +20,12 @@ def my_config():
     filename = '../text/workable'
     n = 21
     runs = 3
+    save_each_epochs = 20000
 
 
 @ex.automain
-def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs):
+def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
+         save_each_epochs):
     train_data, input2id, output2id = parse_train_data(filename)
     id2input = {v: k for k, v in input2id.items()}
     id2output = {v: k for k, v in output2id.items()}
@@ -63,7 +65,7 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs):
                 print('predicted output:\t{}'.format(id2output[output_num]))
                 print()
 
-            if i % 10000 == 0 and i > 0:
+            if i % save_each_epochs == 0 and i > 0:
                 dt = datetime.datetime.now().isoformat()
                 torch.save(m, 'model_{}'.format(dt))
 
