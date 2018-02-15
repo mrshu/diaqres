@@ -1,0 +1,11 @@
+docopt==0.6.2
+jsonpickle==0.9.6
+munch==2.2.0
+numpy==1.14.0
+protobuf==3.5.1
+PyYAML==3.12
+sacred==0.7.2
+six==1.11.0
+tensorboardX==1.0
+torch==0.3.1
+wrapt==1.10.11
