@@ -29,7 +29,7 @@ def strip_accents(text):
     text = text.decode("utf-8")
     return str(text)
 
-SLOVAK_ALPHABET = ' 0123456789aäôbcdefghijklmnopqrstuvwxyzáčďéíĺľňóŕšťúýž'
+SLOVAK_ALPHABET = ' 0123456789aäbcdefghijklmnopqrstuvwxyzáčďéíĺľňóôŕšťúýž'
 
 
 def generate_xy(input, input2id, output2id, n=11,

@@ -2,6 +2,13 @@ from process import parse_train_data, generate_xy, strip_accents
 import sys
 
 from sklearn.metrics import classification_report
+import pandas as pd
+pd.set_option('display.width', 1000)  # noqa
+pd.set_option('display.max_columns', 500)  # noqa
+pd.set_option('display.max_rows', 500)  # noqa
+pd.set_option('display.height', 1000)  # noqa
+pd.set_option('display.expand_frame_repr', False)  # noqa
+from pandas_ml import ConfusionMatrix
 
 if __name__ == "__main__":
     n = 21
@@ -18,3 +25,6 @@ if __name__ == "__main__":
         truths.append(id2output[y])
 
     print(classification_report(truths, predictions))
+
+    confusion_matrix = ConfusionMatrix(truths, predictions)
+    print(confusion_matrix)

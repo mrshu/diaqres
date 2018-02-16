@@ -21,6 +21,7 @@ def my_config():
     n = 21
     runs = 3
     save_each_epochs = 20000
+    print_each_epochs = 500
 
 
 @ex.automain
@@ -53,7 +54,7 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
 
             writer.add_scalar('loss', loss.data[0], i)
 
-            if i % 500 == 0:
+            if i % print_each_epochs == 0:
                 print('{} loss: {}'.format(i, loss.data[0]))
 
                 print('text: {}'.format(''.join(list(map(lambda x: id2input[x],
