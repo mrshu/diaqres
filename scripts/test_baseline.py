@@ -24,7 +24,7 @@ if __name__ == "__main__":
         predictions.append(strip_accents(id2output[y]))
         truths.append(id2output[y])
 
-    print(classification_report(truths, predictions))
+    print(classification_report(truths, predictions, digits=5))
 
     confusion_matrix = ConfusionMatrix(truths, predictions)
     print(confusion_matrix)

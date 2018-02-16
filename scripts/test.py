@@ -40,7 +40,7 @@ if __name__ == "__main__":
         predictions.append(id2output[output_num])
         truths.append(id2output[y])
 
-    print(classification_report(truths, predictions))
+    print(classification_report(truths, predictions, digits=5))
 
     confusion_matrix = ConfusionMatrix(truths, predictions)
     print(confusion_matrix)
