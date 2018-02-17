@@ -30,12 +30,14 @@ class BiGRU(nn.Module):
         emb = self.embed(inp)
         emb = self.dropout(emb)
 
-        input = emb.view(len(inp), 1, self.hidden_size)
+        input = emb
+        # input = emb.view(len(inp), 1, self.hidden_size)
 
         gru_out, hidden = self.gru(input)
+        gru_out = gru_out.view(gru_out.size(0),
+                               gru_out.size(1) * gru_out.size(2))
         gru_out = F.tanh(gru_out)
-        gru_out = gru_out.view(gru_out.size(0) * gru_out.size(2))
 
         out = self.h2o(gru_out)
         out = self.softmax(out)
-        return out.view(1, out.size(0))
+        return out

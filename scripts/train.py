@@ -14,7 +14,7 @@ ex = Experiment('some_config')
 @ex.config
 def my_config():
     embed_size = 32
-    hidden_size = 32
+    hidden_size = 50
     n_layers = 1
     dropout = 0.0
     filename = '../text/workable'
@@ -23,11 +23,15 @@ def my_config():
     save_each_epochs = 20000
     print_each_epochs = 500
     loss_avg_n_epochs = 1000
+    minibatch_len = 100
+    cuda = True
 
 
 @ex.automain
 def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
-         save_each_epochs, print_each_epochs, loss_avg_n_epochs):
+         save_each_epochs, print_each_epochs, loss_avg_n_epochs,
+         minibatch_len, cuda):
+
     train_data, input2id, output2id = parse_train_data(filename)
     id2input = {v: k for k, v in input2id.items()}
     id2output = {v: k for k, v in output2id.items()}
@@ -38,19 +42,35 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
               n_layers=n_layers, dropout=dropout, n=n,
               input2id=input2id, output2id=output2id)
 
+    if cuda:
+        m = m.cuda()
+
     criterion = torch.nn.NLLLoss()
     optimizer = torch.optim.Adam(m.parameters(), lr=0.02)
     losses = []
 
-    for _ in range(runs):
+    minibatch_x = []
+    minibatch_y = []
+
+    for r in range(runs):
         for i, (x, y) in enumerate(generate_xy(train_data, input2id, output2id,
                                                n=n)):
             optimizer.zero_grad()
 
-            words = Variable(torch.LongTensor(x))
+            minibatch_x.append(x)
+            minibatch_y.append(y)
+            if i % minibatch_len != 0:
+                continue
+
+            words = Variable(torch.LongTensor(minibatch_x))
+            if cuda:
+                words = words.cuda()
+
             output = m(words)
 
-            out_y = Variable(torch.LongTensor([y]))
+            out_y = Variable(torch.LongTensor(minibatch_y))
+            if cuda:
+                out_y = out_y.cuda()
 
             loss = criterion(output, out_y)
 
@@ -63,16 +83,23 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
             writer.add_scalar('avg_loss', np.mean(losses), i)
 
             if i % print_each_epochs == 0:
-                print('{} loss: {} avg_loss: {}'.format(i, loss.data[0],
-                                                        np.mean(losses)))
+                print('{} ({}) loss: {} avg_loss: {}'.format(i, r,
+                                                             loss.data[0],
+                                                             np.mean(losses)))
 
                 print('text: {}'.format(''.join(list(map(lambda x: id2input[x],
                                                          x)))))
                 print('output:\t\t\t{}'.format(id2output[y]))
                 _, output_id = torch.max(output, 1)
 
-                output_num = output_id.data[0]
+                output_num = output_id.data[-1]
                 print('predicted output:\t{}'.format(id2output[output_num]))
+                print()
+
+                y_true = ''.join([id2output[x] for x in minibatch_y])
+                y_pred = ''.join([id2output[x] for x in output_id.data])
+                print("y_pred: {}".format(y_pred))
+                print("y_true: {}".format(y_true))
                 print()
 
             if i % save_each_epochs == 0 and i > 0:
@@ -81,3 +108,6 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
 
             loss.backward()
             optimizer.step()
+
+            minibatch_x = []
+            minibatch_y = []
