@@ -22,11 +22,12 @@ def my_config():
     runs = 3
     save_each_epochs = 20000
     print_each_epochs = 500
+    loss_avg_n_epochs = 1000
 
 
 @ex.automain
 def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
-         save_each_epochs):
+         save_each_epochs, print_each_epochs, loss_avg_n_epochs):
     train_data, input2id, output2id = parse_train_data(filename)
     id2input = {v: k for k, v in input2id.items()}
     id2output = {v: k for k, v in output2id.items()}
@@ -39,6 +40,7 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
 
     criterion = torch.nn.NLLLoss()
     optimizer = torch.optim.Adam(m.parameters(), lr=0.02)
+    losses = []
 
     for _ in range(runs):
         for i, (x, y) in enumerate(generate_xy(train_data, input2id, output2id,
@@ -54,8 +56,15 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
 
             writer.add_scalar('loss', loss.data[0], i)
 
+            losses.append(loss.data[0])
+            if len(losses) > loss_avg_n_epochs:
+                losses.pop(0)
+
+            writer.add_scalar('avg_loss', np.mean(losses), i)
+
             if i % print_each_epochs == 0:
-                print('{} loss: {}'.format(i, loss.data[0]))
+                print('{} loss: {} avg_loss: {}'.format(i, loss.data[0],
+                                                        np.mean(losses)))
 
                 print('text: {}'.format(''.join(list(map(lambda x: id2input[x],
                                                          x)))))
