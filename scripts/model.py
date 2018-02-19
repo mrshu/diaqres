@@ -23,7 +23,7 @@ class BiGRU(nn.Module):
         self.h2o = nn.Linear(hidden_size * self.bidirectional_multiplier * n,
                              output_vocab_size)
 
-        self.softmax = nn.LogSoftmax(dim=0)
+        self.softmax = nn.LogSoftmax(dim=1)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, inp):
