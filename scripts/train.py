@@ -1,4 +1,4 @@
-from model import BiGRU
+from model import DiacModel
 from process import parse_train_data, generate_xy
 from sacred import Experiment
 import numpy as np
@@ -25,12 +25,13 @@ def my_config():
     loss_avg_n_epochs = 1000
     minibatch_len = 100
     cuda = True
+    clip = 0.25
 
 
 @ex.automain
 def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
          save_each_epochs, print_each_epochs, loss_avg_n_epochs,
-         minibatch_len, cuda):
+         minibatch_len, cuda, clip):
 
     train_data, input2id, output2id = parse_train_data(filename)
     id2input = {v: k for k, v in input2id.items()}
@@ -38,9 +39,9 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
 
     writer = SummaryWriter()
 
-    m = BiGRU(len(input2id), embed_size, hidden_size, len(output2id),
-              n_layers=n_layers, dropout=dropout, n=n,
-              input2id=input2id, output2id=output2id)
+    m = DiacModel(len(input2id), embed_size, hidden_size, len(output2id),
+                  n_layers=n_layers, dropout=dropout, n=n,
+                  input2id=input2id, output2id=output2id)
 
     if cuda:
         m = m.cuda()
@@ -108,6 +109,8 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
 
             loss.backward()
             optimizer.step()
+
+            torch.nn.utils.clip_grad_norm(m.parameters(), clip)
 
             minibatch_x = []
             minibatch_y = []

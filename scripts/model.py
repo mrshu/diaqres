@@ -3,19 +3,22 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class BiGRU(nn.Module):
+class DiacModel(nn.Module):
     def __init__(self, vocab_size, embed_size, hidden_size, output_vocab_size,
                  n_layers=1, bidirectional=True, dropout=0.0, n=11,
-                 input2id=None, output2id=None):
-        super(BiGRU, self).__init__()
+                 input2id=None, output2id=None, use_only_final=False,
+                 model_type='gru'):
+        super(DiacModel, self).__init__()
 
         self.n = n
         self.input2id = input2id
         self.output2id = output2id
 
         self.embed = nn.Embedding(vocab_size, embed_size)
-        self.gru = nn.GRU(embed_size, hidden_size, num_layers=n_layers,
-                          dropout=dropout, bidirectional=bidirectional)
+        model = {'gru': nn.GRU, 'lstm': nn.LSTM}
+        model_instance = model[model_type]
+        self.gru = model_instance(embed_size, hidden_size, num_layers=n_layers,
+                                  dropout=dropout, bidirectional=bidirectional)
 
         self.hidden_size = hidden_size
         self.bidirectional_multiplier = 2 if bidirectional else 1
