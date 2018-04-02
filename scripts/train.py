@@ -26,12 +26,13 @@ def my_config():
     minibatch_len = 100
     cuda = True
     clip = 0.25
+    lr = 0.02
 
 
 @ex.automain
 def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
          save_each_epochs, print_each_epochs, loss_avg_n_epochs,
-         minibatch_len, cuda, clip):
+         minibatch_len, cuda, clip, lr):
 
     train_data, input2id, output2id = parse_train_data(filename)
     id2input = {v: k for k, v in input2id.items()}
@@ -46,8 +47,8 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
     if cuda:
         m = m.cuda()
 
-    criterion = torch.nn.NLLLoss()
-    optimizer = torch.optim.Adam(m.parameters(), lr=0.02)
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(m.parameters(), lr=lr)
     losses = []
 
     minibatch_x = []

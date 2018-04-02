@@ -42,5 +42,4 @@ class DiacModel(nn.Module):
         gru_out = F.tanh(gru_out)
 
         out = self.h2o(gru_out)
-        out = self.softmax(out)
         return out
