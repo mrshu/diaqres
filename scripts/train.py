@@ -57,7 +57,9 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
     for r in range(runs):
         for i, (x, y) in enumerate(generate_xy(train_data, input2id, output2id,
                                                n=n)):
+
             optimizer.zero_grad()
+            model.zero_grad()
 
             minibatch_x.append(x)
             minibatch_y.append(y)
@@ -109,9 +111,9 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
                 torch.save(m, 'model_{}'.format(dt))
 
             loss.backward()
-            optimizer.step()
 
             torch.nn.utils.clip_grad_norm(m.parameters(), clip)
+            optimizer.step()
 
             minibatch_x = []
             minibatch_y = []
