@@ -1,4 +1,3 @@
-from model import BiGRU
 from process import parse_train_data, generate_xy
 import sys
 
@@ -31,7 +30,7 @@ if __name__ == "__main__":
     for i, (x, y) in enumerate(generate_xy(test_data, m.input2id, m.output2id,
                                            n=n)):
 
-        words = Variable(torch.LongTensor(x))
+        words = Variable(torch.LongTensor([x]))
 
         output = m(words)
         _, output_id = torch.max(output, 1)
@@ -44,3 +43,9 @@ if __name__ == "__main__":
 
     confusion_matrix = ConfusionMatrix(truths, predictions)
     print(confusion_matrix)
+
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    confusion_matrix.plot(normalized=True)
+    plt.savefig('{}_confusion_matrix.png'.format(sys.argv[2]))
