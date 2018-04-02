@@ -59,7 +59,7 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
                                                n=n)):
 
             optimizer.zero_grad()
-            model.zero_grad()
+            m.zero_grad()
 
             minibatch_x.append(x)
             minibatch_y.append(y)
