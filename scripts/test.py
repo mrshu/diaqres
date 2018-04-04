@@ -14,10 +14,11 @@ pd.set_option('display.expand_frame_repr', False)  # noqa
 from pandas_ml import ConfusionMatrix
 
 if __name__ == "__main__":
-    minibatch_len = 200
+    minibatch_len = int(sys.argv[3])
 
     test_data, input2id, output2id = parse_train_data(sys.argv[1])
     m = torch.load(sys.argv[2])
+    print(m)
     id2input = {v: k for k, v in m.input2id.items()}
     id2output = {v: k for k, v in m.output2id.items()}
 
@@ -45,6 +46,8 @@ if __name__ == "__main__":
 
         minibatch_x = []
         minibatch_y = []
+
+        print(i)
 
     print(classification_report(truths, predictions, digits=5))
 
