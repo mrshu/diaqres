@@ -14,6 +14,8 @@ pd.set_option('display.expand_frame_repr', False)  # noqa
 from pandas_ml import ConfusionMatrix
 
 if __name__ == "__main__":
+    minibatch_len = 200
+
     test_data, input2id, output2id = parse_train_data(sys.argv[1])
     m = torch.load(sys.argv[2])
     id2input = {v: k for k, v in m.input2id.items()}
@@ -21,17 +23,28 @@ if __name__ == "__main__":
 
     predictions = []
     truths = []
+
+    minibatch_x = []
+    minibatch_y = []
     for i, (x, y) in enumerate(generate_xy(test_data, m.input2id, m.output2id,
                                            n=m.n)):
 
-        words = Variable(torch.LongTensor([x]))
+        if len(minibatch_x) < minibatch_len:
+            minibatch_x.append(x)
+            minibatch_y.append(y)
+            continue
+
+        words = Variable(torch.LongTensor(minibatch_x))
 
         output = m(words)
-        _, output_id = torch.max(output, 1)
-        output_num = output_id.data[0]
+        _, output_ids = torch.max(output, 1)
+        print(output_ids)
 
-        predictions.append(id2output[output_num])
-        truths.append(id2output[y])
+        predictions.extend([id2output[num] for num in output_ids.data])
+        truths.extend([id2output[y] for y in minibatch_y])
+
+        minibatch_x = []
+        minibatch_y = []
 
     print(classification_report(truths, predictions, digits=5))
 
