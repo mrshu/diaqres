@@ -22,7 +22,7 @@ if __name__ == "__main__":
     predictions = []
     truths = []
     for i, (x, y) in enumerate(generate_xy(test_data, m.input2id, m.output2id,
-                                           m.n=n)):
+                                           n=m.n)):
 
         words = Variable(torch.LongTensor([x]))
 
