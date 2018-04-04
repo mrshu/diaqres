@@ -40,7 +40,6 @@ if __name__ == "__main__":
 
         output = m(words)
         _, output_ids = torch.max(output, 1)
-        print(output_ids)
 
         predictions.extend([id2output[num] for num in output_ids.data])
         truths.extend([id2output[y] for y in minibatch_y])
@@ -48,7 +47,8 @@ if __name__ == "__main__":
         minibatch_x = []
         minibatch_y = []
 
-        print(i)
+        if i % 500 and i > 0:
+            print(i)
 
     print(classification_report(truths, predictions, digits=5))
 
