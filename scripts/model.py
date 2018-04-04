@@ -43,3 +43,9 @@ class DiacModel(nn.Module):
 
         out = self.h2o(gru_out)
         return out
+
+
+class BiGRU(DiacModel):
+    def __init__(self, *args, **kwargs):
+        kwargs['model_type'] = 'gru'
+        super(BiGRU, self).__init__(*args, **kwargs)

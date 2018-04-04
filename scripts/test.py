@@ -14,12 +14,6 @@ pd.set_option('display.expand_frame_repr', False)  # noqa
 from pandas_ml import ConfusionMatrix
 
 if __name__ == "__main__":
-    embed_size = 32
-    hidden_size = 32
-    n_layers = 1
-    dropout = 0.0
-    n = 21
-
     test_data, input2id, output2id = parse_train_data(sys.argv[1])
     m = torch.load(sys.argv[2])
     id2input = {v: k for k, v in m.input2id.items()}
@@ -28,7 +22,7 @@ if __name__ == "__main__":
     predictions = []
     truths = []
     for i, (x, y) in enumerate(generate_xy(test_data, m.input2id, m.output2id,
-                                           n=n)):
+                                           m.n=n)):
 
         words = Variable(torch.LongTensor([x]))
 
