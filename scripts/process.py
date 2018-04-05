@@ -33,14 +33,18 @@ SLOVAK_ALPHABET = ' 0123456789aäbcdefghijklmnopqrstuvwxyzáčďéíĺľňóôŕ
 
 
 def generate_xy(input, input2id, output2id, n=11,
-                alphabet=SLOVAK_ALPHABET):
+                alphabet=SLOVAK_ALPHABET, teacher_forcing=False):
     N = len(input)
     i = 0
     while i+n < N:
         subset = input[i:i+n]
         y = subset[n//2]
         y = output2id[y]
-        x = list(map(strip_accents, subset))
+        if teacher_forcing:
+            p = n//2+1
+            x = subset[:p] + list(map(strip_accents, subset[p:]))
+        else:
+            x = list(map(strip_accents, subset))
         yield list(map(lambda x: input2id[x], x)), y
         i += 1
 

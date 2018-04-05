@@ -27,14 +27,20 @@ def my_config():
     cuda = True
     clip = 0.25
     lr = 0.02
+    teacher_forcing = False
 
 
 @ex.automain
 def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
          save_each_epochs, print_each_epochs, loss_avg_n_epochs,
-         minibatch_len, cuda, clip, lr):
+         minibatch_len, cuda, clip, lr, teacher_forcing):
 
     train_data, input2id, output2id = parse_train_data(filename)
+    if teacher_forcing:
+        input2id = output2id.copy()
+
+    print(input2id)
+    print(output2id)
     id2input = {v: k for k, v in input2id.items()}
     id2output = {v: k for k, v in output2id.items()}
 
@@ -54,9 +60,11 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
     minibatch_x = []
     minibatch_y = []
 
+    tchr_forcing = teacher_forcing
     for r in range(runs):
         for i, (x, y) in enumerate(generate_xy(train_data, input2id, output2id,
-                                               n=n)):
+                                               n=n,
+                                               teacher_forcing=tchr_forcing)):
 
             optimizer.zero_grad()
             m.zero_grad()

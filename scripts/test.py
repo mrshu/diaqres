@@ -47,7 +47,7 @@ if __name__ == "__main__":
         minibatch_x = []
         minibatch_y = []
 
-        if i % 500 and i > 0:
+        if i % 500 == 0 and i > 0:
             print(i)
 
     print(classification_report(truths, predictions, digits=5))
