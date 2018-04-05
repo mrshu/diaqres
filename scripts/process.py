@@ -41,7 +41,7 @@ def generate_xy(input, input2id, output2id, n=11,
         y = subset[n//2]
         y = output2id[y]
         if teacher_forcing:
-            p = n//2+1
+            p = n//2
             x = subset[:p] + list(map(strip_accents, subset[p:]))
         else:
             x = list(map(strip_accents, subset))
