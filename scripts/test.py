@@ -29,7 +29,8 @@ if __name__ == "__main__":
     minibatch_x = []
     minibatch_y = []
     for i, (x, y) in enumerate(generate_xy(test_data, m.input2id, m.output2id,
-                                           n=m.n)):
+                                           n=m.n,
+                                           teacher_forcing=m.teacher_forcing)):
 
         if len(minibatch_x) < minibatch_len:
             minibatch_x.append(x)

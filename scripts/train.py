@@ -61,6 +61,7 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
     minibatch_y = []
 
     tchr_forcing = teacher_forcing
+    m.teacher_forcing = teacher_forcing
     for r in range(runs):
         for i, (x, y) in enumerate(generate_xy(train_data, input2id, output2id,
                                                n=n,
