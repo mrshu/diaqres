@@ -34,13 +34,20 @@ if __name__ == "__main__":
         teacher_forcing = m.teacher_forcing
 
     for i, (x, y) in enumerate(generate_xy(test_data, m.input2id, m.output2id,
-                                           n=m.n,
-                                           teacher_forcing=teacher_forcing)):
+                                           n=m.n)):
 
-        if len(minibatch_x) < minibatch_len:
+        if len(minibatch_x) < minibatch_len and not teacher_forcing:
             minibatch_x.append(x)
             minibatch_y.append(y)
             continue
+
+        if teacher_forcing:
+            if len(predictions) > m.n // 2:
+                for i in range(m.n//2):
+                    x[i] = m.input2id[predictions[-m.n//2+i]]
+
+            minibatch_x = [x]
+            minibatch_y = [y]
 
         words = Variable(torch.LongTensor(minibatch_x))
 
