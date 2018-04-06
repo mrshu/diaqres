@@ -70,8 +70,15 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
             optimizer.zero_grad()
             m.zero_grad()
 
-            minibatch_x.append(x)
-            minibatch_y.append(y)
+            if tchr_forcing:
+                tf, x = x
+                minibatch_x.append(x)
+                minibatch_y.append(y)
+                minibatch_x.append(tf)
+                minibatch_y.append(y)
+            else:
+                minibatch_x.append(x)
+                minibatch_y.append(y)
             if i % minibatch_len != 0:
                 continue
 
@@ -94,6 +101,10 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
                 losses.pop(0)
 
             writer.add_scalar('avg_loss', np.mean(losses), i)
+            txt = ''.join(list(map(lambda x: id2input[x], x)))
+            # print('text: {} m: {} y: {}'.format(txt,
+            #                                     txt[len(txt)//2],
+            #                                     id2output[y]))
 
             if i % print_each_epochs == 0:
                 print('{} ({}) loss: {} avg_loss: {}'.format(i, r,

@@ -38,14 +38,18 @@ def generate_xy(input, input2id, output2id, n=11,
     i = 0
     while i+n < N:
         subset = input[i:i+n]
-        y = subset[n//2]
+        p = n//2
+        y = subset[p]
         y = output2id[y]
         if teacher_forcing:
-            p = n//2
-            x = subset[:p] + list(map(strip_accents, subset[p:]))
+            tf = subset[:p] + list(map(strip_accents, subset[p:]))
+            tf = list(map(lambda x: input2id[x], tf))
+            x = list(map(strip_accents, subset))
+            x = list(map(lambda x: input2id[x], x))
+            yield (tf, x), y
         else:
             x = list(map(strip_accents, subset))
-        yield list(map(lambda x: input2id[x], x)), y
+            yield list(map(lambda x: input2id[x], x)), y
         i += 1
 
 
