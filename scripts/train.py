@@ -44,6 +44,8 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
     id2input = {v: k for k, v in input2id.items()}
     id2output = {v: k for k, v in output2id.items()}
 
+    writer = SummaryWriter()
+
     m = DiacModel(len(input2id), embed_size, hidden_size, len(output2id),
                   n_layers=n_layers, dropout=dropout, n=n,
                   input2id=input2id, output2id=output2id)
@@ -93,16 +95,13 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
 
             loss = criterion(output, out_y)
 
-            with SummaryWriter() as writer:
-                writer.add_scalar('loss', loss.data[0], i)
+            writer.add_scalar('loss', loss.data[0], i)
 
             losses.append(loss.data[0])
             if len(losses) > loss_avg_n_epochs:
                 losses.pop(0)
 
-            with SummaryWriter() as writer:
-                writer.add_scalar('avg_loss', np.mean(losses), i)
-
+            writer.add_scalar('avg_loss', np.mean(losses), i)
             txt = ''.join(list(map(lambda x: id2input[x], x)))
             # print('text: {} m: {} y: {}'.format(txt,
             #                                     txt[len(txt)//2],
