@@ -129,7 +129,7 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
                                                          x)))))
                 print('output:\t\t\t{}'.format(id2output[y]))
                 _, output_id = torch.max(output, 1)
-                output_id_data = output_id.data.numpy()
+                output_id_data = output_id.data.cpu().numpy()
                 if minibatch_shuffle:
                     output_id_data = output_id_data[ip]
 
