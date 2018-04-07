@@ -4,6 +4,7 @@ from sacred import Experiment
 import numpy as np
 from tensorboardX import SummaryWriter
 import datetime
+from sklearn.utils import shuffle
 
 import torch
 from torch.autograd import Variable
@@ -82,6 +83,8 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
 
             if i % minibatch_len != 0:
                 continue
+
+            minibatch_x, minibatch_y = shuffle(minibatch_x, minibatch_y)
 
             words = Variable(torch.LongTensor(minibatch_x))
             if cuda:
