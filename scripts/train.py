@@ -29,12 +29,13 @@ def my_config():
     clip = 0.25
     lr = 0.02
     teacher_forcing = False
+    minibatch_shuffle = True
 
 
 @ex.automain
 def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
          save_each_epochs, print_each_epochs, loss_avg_n_epochs,
-         minibatch_len, cuda, clip, lr, teacher_forcing):
+         minibatch_len, cuda, clip, lr, teacher_forcing, minibatch_shuffle):
 
     train_data, input2id, output2id = parse_train_data(filename)
     if teacher_forcing:
@@ -84,7 +85,10 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
             if i % minibatch_len != 0:
                 continue
 
-            minibatch_x, minibatch_y = shuffle(minibatch_x, minibatch_y)
+            p = np.random.permutation(len(minibatch_x))
+            if minibatch_shuffle:
+                minibatch_x = np.array(minibatch_x)[p]
+                minibatch_y = np.array(minibatch_y)[p]
 
             words = Variable(torch.LongTensor(minibatch_x))
             if cuda:
@@ -111,6 +115,12 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
             #                                     id2output[y]))
 
             if i % print_each_epochs == 0:
+                # invert the minibatch back
+                ip = np.argsort(p)
+                if minibatch_shuffle:
+                    minibatch_x = np.array(minibatch_x)[ip]
+                    minibatch_y = np.array(minibatch_y)[ip]
+
                 print('{} ({}) loss: {} avg_loss: {}'.format(i, r,
                                                              loss.data[0],
                                                              np.mean(losses)))
@@ -119,13 +129,16 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
                                                          x)))))
                 print('output:\t\t\t{}'.format(id2output[y]))
                 _, output_id = torch.max(output, 1)
+                output_id_data = output_id.data.numpy()
+                if minibatch_shuffle:
+                    output_id_data = output_id_data[ip]
 
-                output_num = output_id.data[-1]
+                output_num = output_id_data[-1]
                 print('predicted output:\t{}'.format(id2output[output_num]))
                 print()
 
                 y_true = ''.join([id2output[x] for x in minibatch_y])
-                y_pred = ''.join([id2output[x] for x in output_id.data])
+                y_pred = ''.join([id2output[x] for x in output_id_data])
                 print("y_pred: {}".format(y_pred))
                 print("y_true: {}".format(y_true))
                 print()
