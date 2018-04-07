@@ -48,7 +48,7 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
     id2input = {v: k for k, v in input2id.items()}
     id2output = {v: k for k, v in output2id.items()}
 
-    writer = SummaryWriter()
+    writer = SummaryWriter(comment='_{}'.format(ex.current_run._id))
     writer.add_text('config', str(ex.current_run.config))
 
     m = DiacModel(len(input2id), embed_size, hidden_size, len(output2id),
