@@ -145,7 +145,7 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
 
             if i % save_each_epochs == 0 and i > 0:
                 dt = datetime.datetime.now().isoformat()
-                torch.save(m, 'model_{}'.format(dt))
+                torch.save(m, 'model_{}_{}'.format(ex.current_run._id, dt))
 
             loss.backward()
 
