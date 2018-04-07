@@ -11,7 +11,7 @@ setup(
     url='https://github.com/mrshu/diaqres',
 
     include_package_data=True,
-    install_requires=['Click', 'requests'],
+    install_requires=['Click', 'requests', 'scipy', 'numpy', 'scikit-learn'],
     packages=['diaqres'],
 
     license="GPL 3.0",

@@ -9,7 +9,7 @@ DEBREE = re.compile(r'\%.+>', re.IGNORECASE)
 TABLE_DEBREE = re.compile(r'^\![^\|]+\|', re.IGNORECASE)
 PX_DEBREE = re.compile(r'px[^>]+>', re.IGNORECASE)
 WHITESPACE = re.compile(r'\s+', re.IGNORECASE)
-NON_LATIN_RE = r'[^\x00-\x7F\x80-\xFF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]'
+NON_LATIN_RE = r'[^\x00-\x7F\x80-\xFF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFFáäčďéíĺľňóôöőŕšťúüűýž]'
 
 WORD = re.compile(r'\b\w\w+\b', re.IGNORECASE | re.UNICODE)
 
@@ -39,7 +39,7 @@ def clean_dump(filename, ignore_character_group=NON_LATIN_RE, chunk_size=1024):
                     line = DEBREE.sub('', line)
                     line = TABLE_DEBREE.sub('', line)
                     line = PX_DEBREE.sub('', line)
-                    line = ignore_characters.sub('', unicode(line))
+                    line = ignore_characters.sub('', line)
 
                     line = WHITESPACE.sub(' ', line)
                     line = WHITESPACE.sub(' ', line)
@@ -193,7 +193,7 @@ def file_to_grapheme_corpus(filename, window, chunk_size=100):
 def string_to_grapheme_corpus(string, window, chunk_size=100):
     from io import StringIO
     out = StringIO()
-    out.write(unicode(string))
+    out.write(string)
     # Start at the beginning of the file/string
     out.seek(0)
     return readable_to_grapheme_corpus(out, window, chunk_size)
@@ -213,21 +213,22 @@ def readable_to_grapheme_corpus(readable, window, chunk_size=100):
         prev_data = data
         line = line.lower()
         clean_line = remove_accents(line)
+        # print("{}\n{}\n\n".format(line, clean_line))
         for i in range(window, len(line)-window):
-            yield (zip(range(2*window + 1),
-                       list(clean_line[i-window:i+1+window])),
+            yield (list(zip(range(2*window + 1),
+                        list(clean_line[i-window:i+1+window]))),
                    line[i])
 
 
 def save_object(object, file):
     import pickle
-    with open(file, 'w') as f:
+    with open(file, 'wb') as f:
         pickle.dump(object, f)
 
 
 def load_object(file):
     import pickle
-    with open(file, 'r') as f:
+    with open(file, 'rb') as f:
         return pickle.load(f)
 
 
@@ -251,4 +252,5 @@ def test_model(model, filename, characters=None):
     print(line[:50])
     print(restored_line[:50])
     click.echo(classification_report(list(line),
-                                     list(restored_line)))
+                                     list(restored_line),
+                                     digits=5))

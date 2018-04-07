@@ -61,6 +61,26 @@ def graphemize(filename, characters):
     save_object(model, "{}.model".format(filename))
 
 
+@main.command('nomodelize')
+@click.option('--filename',
+              type=click.Path(exists=True),
+              required=True)
+@click.option('--characters', required=True)
+def graphemize(filename, characters):
+    from .utils import (file_to_grapheme_corpus, load_object, save_object,
+                        remove_accents)
+    from .models import NoLearningBaselineModel
+    corpus = file_to_grapheme_corpus(filename, 5)
+    output_classes = list(characters)
+    input_classes = list(set(remove_accents(characters)))
+    click.echo(output_classes)
+
+    model = NoLearningBaselineModel(input_classes=input_classes)
+    model.train(corpus, output_classes + input_classes)
+    click.echo(model.restore('Fantasticky program'))
+    save_object(model, "{}.nomodel".format(filename))
+
+
 @main.command('model-test')
 @click.option('--modelpath',
               type=click.Path(exists=True),
@@ -72,7 +92,30 @@ def graphemize(filename, characters):
 def model_test(modelpath, filepath, characters):
     from .utils import file_to_grapheme_corpus, load_object, test_model
     model = load_object(modelpath)
+    print(model)
     test_model(model, filepath, characters=characters)
+
+
+@main.command('lstmize')
+@click.option('--filename',
+              type=click.Path(exists=True),
+              required=True)
+@click.option('--characters', required=True)
+def graphemize(filename, characters):
+    from .utils import (file_to_grapheme_corpus, load_object, save_object,
+                        remove_accents, test_model)
+    from .models import LSTMModel
+    corpus = file_to_grapheme_corpus(filename, 5)
+    output_classes = list(characters)
+    input_classes = list(set(remove_accents(characters)))
+    click.echo(output_classes)
+
+    model = LSTMModel(input_classes=input_classes,
+                      output_classes=list(characters))
+    model.train(corpus, output_classes + input_classes)
+    click.echo(model.restore('Fantasticky program'))
+    test_model(model, filename, characters=characters)
+
 
 if __name__ == '__main__':
     main()
