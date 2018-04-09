@@ -6,8 +6,8 @@ import torch.nn.functional as F
 class DiacModel(nn.Module):
     def __init__(self, vocab_size, embed_size, hidden_size, output_vocab_size,
                  n_layers=1, bidirectional=True, dropout=0.0, n=11,
-                 input2id=None, output2id=None, use_only_final=False,
-                 model_type='gru'):
+                 input2id=None, output2id=None,
+                 model_type='gru', out_dropout=0.0):
         super(DiacModel, self).__init__()
 
         self.n = n
@@ -28,6 +28,7 @@ class DiacModel(nn.Module):
 
         self.softmax = nn.LogSoftmax(dim=1)
         self.dropout = nn.Dropout(dropout)
+        self.out_dropout = nn.Dropout(out_dropout)
 
     def forward(self, inp):
         emb = self.embed(inp)
@@ -37,6 +38,8 @@ class DiacModel(nn.Module):
         # input = emb.view(len(inp), 1, self.hidden_size)
 
         gru_out, hidden = self.gru(input)
+        gru_out = self.out_dropout(gru_out)
+
         gru_out = gru_out.view(gru_out.size(0),
                                gru_out.size(1) * gru_out.size(2))
         gru_out = F.tanh(gru_out)

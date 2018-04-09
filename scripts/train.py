@@ -18,6 +18,7 @@ def my_config():
     hidden_size = 50
     n_layers = 1
     dropout = 0.0
+    out_dropout = 0.0
     filename = '../text/workable'
     n = 21
     runs = 3
@@ -27,17 +28,18 @@ def my_config():
     minibatch_len = 100
     cuda = True
     clip = 0.25
-    lr = 0.02
+    lr = 0.002
+    weight_decay = 1.2e-6
     teacher_forcing = False
     minibatch_shuffle = True
     model_type = 'gru'
 
 
 @ex.automain
-def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
-         save_each_epochs, print_each_epochs, loss_avg_n_epochs,
-         minibatch_len, cuda, clip, lr, teacher_forcing, minibatch_shuffle,
-         model_type):
+def main(embed_size, hidden_size, n_layers, dropout, out_dropout, filename,
+         n, runs, save_each_epochs, print_each_epochs, loss_avg_n_epochs,
+         minibatch_len, cuda, clip, lr, weight_decay, teacher_forcing,
+         minibatch_shuffle, model_type):
 
     train_data, input2id, output2id = parse_train_data(filename)
     if teacher_forcing:
@@ -54,13 +56,14 @@ def main(embed_size, hidden_size, n_layers, dropout, filename, n, runs,
     m = DiacModel(len(input2id), embed_size, hidden_size, len(output2id),
                   n_layers=n_layers, dropout=dropout, n=n,
                   input2id=input2id, output2id=output2id,
-                  model_type=model_type)
+                  model_type=model_type, out_dropout=out_dropout)
 
     if cuda:
         m = m.cuda()
 
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(m.parameters(), lr=lr)
+    optimizer = torch.optim.Adam(m.parameters(), lr=lr,
+                                 weight_decay=weight_decay)
     losses = []
 
     minibatch_x = []
