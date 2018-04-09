@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from indrnn import IndRNN
+
 
 class DiacModel(nn.Module):
     def __init__(self, vocab_size, embed_size, hidden_size, output_vocab_size,
@@ -15,7 +17,7 @@ class DiacModel(nn.Module):
         self.output2id = output2id
 
         self.embed = nn.Embedding(vocab_size, embed_size)
-        model = {'gru': nn.GRU, 'lstm': nn.LSTM}
+        model = {'gru': nn.GRU, 'lstm': nn.LSTM, 'indrnn': IndRNN}
         model_instance = model[model_type]
         self.gru = model_instance(embed_size, hidden_size, num_layers=n_layers,
                                   dropout=dropout, bidirectional=bidirectional)
