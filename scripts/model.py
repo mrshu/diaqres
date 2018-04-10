@@ -26,9 +26,13 @@ class DiacModel(nn.Module):
         self.bidirectional_multiplier = 2 if bidirectional else 1
         self.finish_type = finish_type
 
-        h2o_multiplier = n
-        if finish_type == 'attention':
-            h2o_multiplier = 2
+        h2o_multiplier_dict = {
+            'attention': 2,
+            'central_only': 1,
+            'flatten': n
+        }
+
+        h2o_multiplier = h2o_multiplier_dict[finish_type]
 
         h_size = hidden_size * self.bidirectional_multiplier * h2o_multiplier
 
@@ -54,6 +58,8 @@ class DiacModel(nn.Module):
 
         final_output = gru_out.view(gru_out.size(0),
                                     gru_out.size(1) * gru_out.size(2))
+        if hasattr(self, 'finish_type') and self.finish_type == 'central_only':
+            final_output = gru_out[:, self.n//2, :]
 
         if hasattr(self, 'finish_type') and self.finish_type == 'attention':
             central = gru_out[:, self.n//2, :]

@@ -52,7 +52,9 @@ def main(embed_size, hidden_size, n_layers, dropout, out_dropout, filename,
     id2input = {v: k for k, v in input2id.items()}
     id2output = {v: k for k, v in output2id.items()}
 
-    writer = SummaryWriter(comment='_{}'.format(ex.current_run._id))
+    exp_id = ex.current_run._id
+
+    writer = SummaryWriter(comment='_{}'.format(exp_id))
     writer.add_text('config', str(ex.current_run.config))
 
     m = DiacModel(len(input2id), embed_size, hidden_size, len(output2id),
@@ -131,9 +133,11 @@ def main(embed_size, hidden_size, n_layers, dropout, out_dropout, filename,
                     minibatch_x = np.array(minibatch_x)[ip]
                     minibatch_y = np.array(minibatch_y)[ip]
 
-                print('{} ({}) loss: {} avg_loss: {}'.format(i, r,
-                                                             loss.data[0],
-                                                             np.mean(losses)))
+                m_losses = np.mean(losses)
+                print('{} ({}) [{}] loss: {} avg_loss: {}'.format(i, r,
+                                                                  exp_id,
+                                                                  loss.data[0],
+                                                                  m_losses))
 
                 print('text: {}'.format(''.join(list(map(lambda x: id2input[x],
                                                          x)))))
@@ -155,7 +159,7 @@ def main(embed_size, hidden_size, n_layers, dropout, out_dropout, filename,
 
             if i % save_each_epochs == 0 and i > 0:
                 dt = datetime.datetime.now().isoformat()
-                torch.save(m, 'model_{}_{}'.format(ex.current_run._id, dt))
+                torch.save(m, 'model_{}_{}'.format(exp_id, dt))
 
             loss.backward()
 
