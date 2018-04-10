@@ -9,7 +9,7 @@ class DiacModel(nn.Module):
     def __init__(self, vocab_size, embed_size, hidden_size, output_vocab_size,
                  n_layers=1, bidirectional=True, dropout=0.0, n=11,
                  input2id=None, output2id=None,
-                 model_type='gru', out_dropout=0.0):
+                 model_type='gru', out_dropout=0.0, finish_type='flatten'):
         super(DiacModel, self).__init__()
 
         self.n = n
@@ -24,9 +24,18 @@ class DiacModel(nn.Module):
 
         self.hidden_size = hidden_size
         self.bidirectional_multiplier = 2 if bidirectional else 1
+        self.finish_type = finish_type
 
-        self.h2o = nn.Linear(hidden_size * self.bidirectional_multiplier * n,
-                             output_vocab_size)
+        h2o_multiplier = n
+        if finish_type == 'attention':
+            h2o_multiplier = 2
+
+        h_size = hidden_size * self.bidirectional_multiplier * h2o_multiplier
+
+        self.h2o = nn.Linear(h_size, output_vocab_size)
+
+        self.attn = nn.Linear(hidden_size * self.bidirectional_multiplier,
+                              self.n)
 
         self.softmax = nn.LogSoftmax(dim=1)
         self.dropout = nn.Dropout(dropout)
@@ -40,13 +49,23 @@ class DiacModel(nn.Module):
         # input = emb.view(len(inp), 1, self.hidden_size)
 
         gru_out, hidden = self.gru(input)
-        gru_out = self.out_dropout(gru_out)
+        if hasattr(self, 'out_dropout'):
+            gru_out = self.out_dropout(gru_out)
 
-        gru_out = gru_out.view(gru_out.size(0),
-                               gru_out.size(1) * gru_out.size(2))
-        gru_out = F.tanh(gru_out)
+        final_output = gru_out.view(gru_out.size(0),
+                                    gru_out.size(1) * gru_out.size(2))
 
-        out = self.h2o(gru_out)
+        if hasattr(self, 'finish_type') and self.finish_type == 'attention':
+            central = gru_out[:, self.n//2, :]
+            attn_weights = F.softmax(self.attn(central), dim=1)
+
+            attended_output = torch.bmm(attn_weights.unsqueeze(1), gru_out)
+
+            final_output = torch.cat((central.squeeze(1),
+                                      attended_output.squeeze(1)), 1)
+
+        out = F.tanh(final_output)
+        out = self.h2o(final_output)
         return out
 
 

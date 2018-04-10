@@ -34,13 +34,14 @@ def my_config():
     minibatch_shuffle = True
     model_type = 'gru'
     bidirectional = True
+    finish_type = 'flatten'
 
 
 @ex.automain
 def main(embed_size, hidden_size, n_layers, dropout, out_dropout, filename,
          n, runs, save_each_epochs, print_each_epochs, loss_avg_n_epochs,
          minibatch_len, cuda, clip, lr, weight_decay, teacher_forcing,
-         minibatch_shuffle, model_type, bidirectional):
+         minibatch_shuffle, model_type, bidirectional, finish_type):
 
     train_data, input2id, output2id = parse_train_data(filename)
     if teacher_forcing:
@@ -58,7 +59,7 @@ def main(embed_size, hidden_size, n_layers, dropout, out_dropout, filename,
                   n_layers=n_layers, dropout=dropout, n=n,
                   input2id=input2id, output2id=output2id,
                   model_type=model_type, out_dropout=out_dropout,
-                  bidirectional=bidirectional)
+                  bidirectional=bidirectional, finish_type=finish_type)
 
     if cuda:
         m = m.cuda()
