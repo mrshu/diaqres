@@ -5,6 +5,7 @@ import numpy as np
 from tensorboardX import SummaryWriter
 import datetime
 from sklearn.utils import shuffle
+from cls import CyclicLR
 
 import torch
 from torch.autograd import Variable
@@ -27,7 +28,7 @@ def my_config():
     loss_avg_n_epochs = 1000
     minibatch_len = 100
     cuda = True
-    clip = 0.25
+    clip = 5.0
     lr = 0.002
     weight_decay = 1.2e-6
     teacher_forcing = False
@@ -35,13 +36,16 @@ def my_config():
     model_type = 'gru'
     bidirectional = True
     finish_type = 'flatten'
+    use_cls = False
+    teacher_forcing_ratio = 0.5
 
 
 @ex.automain
 def main(embed_size, hidden_size, n_layers, dropout, out_dropout, filename,
          n, runs, save_each_epochs, print_each_epochs, loss_avg_n_epochs,
          minibatch_len, cuda, clip, lr, weight_decay, teacher_forcing,
-         minibatch_shuffle, model_type, bidirectional, finish_type):
+         minibatch_shuffle, model_type, bidirectional, finish_type, use_cls,
+         teacher_forcing_ratio):
 
     train_data, input2id, output2id = parse_train_data(filename)
     if teacher_forcing:
@@ -69,6 +73,7 @@ def main(embed_size, hidden_size, n_layers, dropout, out_dropout, filename,
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(m.parameters(), lr=lr,
                                  weight_decay=weight_decay)
+    scheduler = CyclicLR(optimizer)
     losses = []
 
     minibatch_x = []
@@ -81,15 +86,20 @@ def main(embed_size, hidden_size, n_layers, dropout, out_dropout, filename,
                                                n=n,
                                                teacher_forcing=tchr_forcing)):
 
+            if use_cls:
+                scheduler.batch_step()
+
             optimizer.zero_grad()
             m.zero_grad()
 
             if tchr_forcing:
                 tf, x = x
-                minibatch_x.append(x)
-                minibatch_y.append(y)
-                minibatch_x.append(tf)
-                minibatch_y.append(y)
+                if np.random.random() < teacher_forcing_ratio:
+                    minibatch_x.append(tf)
+                    minibatch_y.append(y)
+                else:
+                    minibatch_x.append(x)
+                    minibatch_y.append(y)
             else:
                 minibatch_x.append(x)
                 minibatch_y.append(y)
