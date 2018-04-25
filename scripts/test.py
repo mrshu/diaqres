@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
         for (k, p, t) in zip(range(len(predicted)), predicted, truth):
             if p != t:
-                text = ''.join([id2output[num] for num in minibatch_x[k]])
+                text = ''.join([id2input[num] for num in minibatch_x[k]])
                 errors.append((k, text, p, t))
 
         predictions.extend(predicted)
