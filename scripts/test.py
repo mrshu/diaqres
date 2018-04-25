@@ -28,6 +28,7 @@ if __name__ == "__main__":
 
     minibatch_x = []
     minibatch_y = []
+    errors = []
 
     teacher_forcing = False
     if hasattr(m, 'teacher_forcing'):
@@ -49,13 +50,23 @@ if __name__ == "__main__":
             minibatch_x = [x]
             minibatch_y = [y]
 
+        # print(minibatch_x)
+        # print(''.join(list(map(lambda x: id2input[x], minibatch_x[0]))))
         words = Variable(torch.LongTensor(minibatch_x))
 
         output = m(words)
         _, output_ids = torch.max(output, 1)
 
-        predictions.extend([id2output[num] for num in output_ids.data])
-        truths.extend([id2output[y] for y in minibatch_y])
+        predicted = [id2output[num] for num in output_ids.data]
+        truth = [id2output[y] for y in minibatch_y]
+
+        for (k, p, t) in zip(range(len(predicted)), predicted, truth):
+            if p != t:
+                text = ''.join([id2output[num] for num in minibatch_x[k]])
+                errors.append((k, text, p, t))
+
+        predictions.extend(predicted)
+        truths.extend(truth)
 
         minibatch_x = []
         minibatch_y = []
@@ -64,6 +75,8 @@ if __name__ == "__main__":
             print(i)
 
     print(classification_report(truths, predictions, digits=5))
+    import pprint
+    pprint.pprint(errors)
 
     confusion_matrix = ConfusionMatrix(truths, predictions)
     print(confusion_matrix)

@@ -23,7 +23,7 @@ def my_config():
     filename = '../text/workable'
     n = 21
     runs = 3
-    save_each_epochs = 20000
+    save_each_epochs = 200000
     print_each_epochs = 500
     loss_avg_n_epochs = 1000
     minibatch_len = 100
