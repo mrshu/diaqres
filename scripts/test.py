@@ -2,6 +2,7 @@ from process import parse_train_data, generate_xy
 import sys
 
 import torch
+import torch.nn.functional as F
 from torch.autograd import Variable
 from sklearn.metrics import classification_report
 
@@ -63,7 +64,10 @@ if __name__ == "__main__":
         for (k, p, t) in zip(range(len(predicted)), predicted, truth):
             if p != t:
                 text = ''.join([id2input[num] for num in minibatch_x[k]])
-                errors.append((k, text, p, t))
+                softmaxed = F.softmax(output[k], dim=0).data.cpu().numpy()
+                args = softmaxed.argsort()[-3:][::-1]
+                top_3 = tuple((id2output[a], softmaxed[a]) for a in args)
+                errors.append((k, text, t, top_3))
 
         predictions.extend(predicted)
         truths.extend(truth)
@@ -77,6 +81,10 @@ if __name__ == "__main__":
     print(classification_report(truths, predictions, digits=5))
     import pprint
     pprint.pprint(errors)
+
+    T = float(len(truths))
+    E = len(errors)
+    print('accuracy: {}'.format((T-E)/T))
 
     confusion_matrix = ConfusionMatrix(truths, predictions)
     print(confusion_matrix)
