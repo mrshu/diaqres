@@ -177,22 +177,30 @@ class IndRNN(nn.Module):
     """
 
     def __init__(self, input_size, hidden_size, num_layers=1, batch_norm=False,
-                 step_size=None, **kwargs):
+                 step_size=None, bidirectional=False, **kwargs):
         super(IndRNN, self).__init__()
         self.hidden_size = hidden_size
+        self.bidirectional = bidirectional
+
         if batch_norm and step_size is None:
             raise Exception("Frame wise batch size needs to know the step size")
         self.batch_norm = batch_norm
         self.step_size = step_size
         self.num_layers = num_layers
 
-        cells = []
-        for i in range(num_layers):
-            if i == 0:
-                cells += [IndRNNCell(input_size, hidden_size, **kwargs)]
-            else:
-                cells += [IndRNNCell(hidden_size, hidden_size, **kwargs)]
-        self.cells = nn.ModuleList(cells)
+        def build_cells(num_layers, input_idx=0):
+            cells = []
+            for i in range(num_layers):
+                if i == 0:
+                    cells += [IndRNNCell(input_size, hidden_size, **kwargs)]
+                else:
+                    cells += [IndRNNCell(hidden_size, hidden_size, **kwargs)]
+            return cells
+
+        self.forward_cells = nn.ModuleList(build_cells(num_layers))
+        if self.bidirectional:
+            bcells = build_cells(num_layers, input_idx=num_layers-1)
+            self.backward_cells = nn.ModuleList(bcells)
 
         if batch_norm:
             bns = []
@@ -206,15 +214,34 @@ class IndRNN(nn.Module):
 
 
     def forward(self, x, hidden=None):                
-        for i, cell in enumerate(self.cells):
+        out = x
+        for i, cell in enumerate(self.forward_cells):
             cell.check_bounds()
             hx = self.h0.unsqueeze(0).expand(x.size(0), self.hidden_size).contiguous()
             outputs = []
             for t in range(x.size(1)):
-                x_t = x[:, t]
+                x_t = out[:, t]
                 hx = cell(x_t, hx)
                 outputs += [hx]
-            x = torch.stack(outputs, 1)
+            out = torch.stack(outputs, 1)
             if self.batch_norm:
-                x = self.bns[i](x)
-        return x.squeeze(2), None
+                out = self.bns[i](out)
+
+        if self.bidirectional:
+            bout = x
+            for i, cell in enumerate(self.backward_cells):
+                cell.check_bounds()
+                hx = self.h0.unsqueeze(0).expand(x.size(0), self.hidden_size).contiguous()
+                outputs = []
+                for t in range(x.size(1)-1, -1, -1):
+                    x_t = bout[:, t]
+                    hx = cell(x_t, hx)
+                    outputs.insert(0, hx)
+                bout = torch.stack(outputs, 1)
+                if self.batch_norm:
+                    bout = self.bns[i](bout)
+
+        if self.bidirectional:
+            out = torch.cat((out, bout), dim=2)
+        out = out.squeeze(2)
+        return out, None
