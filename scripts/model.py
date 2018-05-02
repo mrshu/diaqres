@@ -17,7 +17,10 @@ class DiacModel(nn.Module):
         self.output2id = output2id
 
         self.embed = nn.Embedding(vocab_size, embed_size)
-        model = {'gru': nn.GRU, 'lstm': nn.LSTM, 'indrnn': IndRNN}
+        model = {'gru': nn.GRU,
+                 'lstm': nn.LSTM,
+                 'indrnn': IndRNN,
+                 'rnn': nn.RNN}
         model_instance = model[model_type]
         self.gru = model_instance(embed_size, hidden_size, num_layers=n_layers,
                                   dropout=dropout, bidirectional=bidirectional)
