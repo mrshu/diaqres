@@ -44,6 +44,8 @@ class DiacModel(nn.Module):
         self.attn = nn.Linear(hidden_size * self.bidirectional_multiplier,
                               self.n)
 
+        self.attn_lin = nn.Linear(self.n, self.n)
+
         self.softmax = nn.LogSoftmax(dim=1)
         self.dropout = nn.Dropout(dropout)
         self.out_dropout = nn.Dropout(out_dropout)
@@ -66,7 +68,8 @@ class DiacModel(nn.Module):
 
         if hasattr(self, 'finish_type') and self.finish_type == 'attention':
             central = gru_out[:, self.n//2, :]
-            attn_weights = F.softmax(self.attn(central), dim=1)
+            attn_weights = F.softmax(self.attn_lin(F.tanh(self.attn(central))),
+                                     dim=1)
 
             attended_output = torch.bmm(attn_weights.unsqueeze(1), gru_out)
 
