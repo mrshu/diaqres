@@ -226,7 +226,7 @@ class IndRNN(nn.Module):
                 x = torch.stack(outputs, 1)
                 if self.batch_norm:
                     x = self.bns[i](x)
-            return x.squeeze(2)
+            return x.squeeze(2), None
 
         out = x
         for i, cell in enumerate(self.forward_cells):
