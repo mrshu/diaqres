@@ -5,6 +5,7 @@ import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 
 import pandas as pd
 pd.set_option('display.width', 1000)  # noqa
@@ -79,6 +80,14 @@ if __name__ == "__main__":
             print(i)
 
     print(classification_report(truths, predictions, digits=5))
+
+    pred_words = ''.join(predictions).split(' ')
+    truth_words = ''.join(truths).split(' ')
+
+    print(classification_report(truth_words, pred_words, digits=5) + '\n' +
+          str(accuracy_score(truth_words, pred_words)),
+          file=open('word_classifications_{}'.format(sys.argv[2]), 'w'))
+
     import pprint
     pprint.pprint(errors)
 
