@@ -214,6 +214,20 @@ class IndRNN(nn.Module):
 
 
     def forward(self, x, hidden=None):                
+        if hasattr(self, 'cells'):
+            for i, cell in enumerate(self.cells):
+                cell.check_bounds()
+                hx = self.h0.unsqueeze(0).expand(x.size(0), self.hidden_size).contiguous()
+                outputs = []
+                for t in range(x.size(1)):
+                    x_t = x[:, t]
+                    hx = cell(x_t, hx)
+                    outputs += [hx]
+                x = torch.stack(outputs, 1)
+                if self.batch_norm:
+                    x = self.bns[i](x)
+            return x.squeeze(2)
+
         out = x
         for i, cell in enumerate(self.forward_cells):
             cell.check_bounds()
